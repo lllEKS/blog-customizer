@@ -3,7 +3,6 @@ import { Button } from 'src/ui/button';
 import { RadioGroup } from 'src/ui/radio-group';
 import { Select } from 'src/ui/select';
 import { Separator } from 'src/ui/separator';
-// import { StoryDecorator } from 'src/ui/story-decorator';
 import { Text } from 'src/ui/text';
 
 import { useState, useRef, useEffect, FormEvent } from 'react';
@@ -14,6 +13,7 @@ import {
 	backgroundColors,
 	contentWidthArr,
 	fontSizeOptions,
+	defaultArticleState,
 	ArticleStateType,
 } from 'src/constants/articleProps';
 
@@ -21,53 +21,77 @@ import clsx from 'clsx';
 import styles from './ArticleParamsForm.module.scss';
 
 type ArticleParamsFormProps = {
-	fontFamily: (select: OptionType) => void;
-	fontSize: (select: OptionType) => void;
-	fontColor: (select: OptionType) => void;
-	backgroundColor: (select: OptionType) => void;
-	contentWidth: (select: OptionType) => void;
-	resetButton: () => void;
-	submitButton: (event: FormEvent) => void;
-	articleState: ArticleStateType;
+	updateArticleState: (articleState: ArticleStateType) => void;
 };
 
 export const ArticleParamsForm = ({
-	fontFamily,
-	fontSize,
-	fontColor,
-	backgroundColor,
-	contentWidth,
-	resetButton,
-	submitButton,
-	articleState,
+	updateArticleState,
 }: ArticleParamsFormProps) => {
-	const [open, setOpen] = useState<boolean>(false);
+	const [articleState, setArticleState] =
+		useState<ArticleStateType>(defaultArticleState);
+	const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 	const ref = useRef<HTMLFormElement | null>(null);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
-			if (open && ref.current && !ref.current.contains(event.target as Node)) {
-				setOpen(false);
+			if (
+				isMenuOpen &&
+				ref.current &&
+				!ref.current.contains(event.target as Node)
+			) {
+				setIsMenuOpen(false);
 			}
 		};
-
+		if (!isMenuOpen) return;
 		document.addEventListener('mousedown', handleClickOutside);
 
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, [open]);
+	}, [isMenuOpen]);
 
 	const toggleForm = () => {
-		setOpen((prevOpen) => !prevOpen);
+		setIsMenuOpen((prevOpen) => !prevOpen);
+	};
+
+	const changeFontFamily = (select: OptionType) => {
+		setArticleState({ ...articleState, fontFamilyOption: select });
+	};
+
+	const changeFontSize = (select: OptionType) => {
+		setArticleState({ ...articleState, fontSizeOption: select });
+	};
+
+	const changeFortColor = (select: OptionType) => {
+		setArticleState({ ...articleState, fontColor: select });
+	};
+
+	const changeBackgroundColor = (select: OptionType) => {
+		setArticleState({ ...articleState, backgroundColor: select });
+	};
+
+	const changeContentWidth = (select: OptionType) => {
+		setArticleState({ ...articleState, contentWidth: select });
+	};
+
+	const submitButton = (event: FormEvent) => {
+		event.preventDefault();
+		updateArticleState(articleState);
+	};
+
+	const resetButton = () => {
+		updateArticleState(defaultArticleState);
+		setArticleState(defaultArticleState);
 	};
 
 	return (
 		<>
-			<ArrowButton isOpen={open} onClick={toggleForm} />
+			<ArrowButton isOpen={isMenuOpen} onClick={toggleForm} />
 			<aside
-				className={clsx(styles.container, { [styles.container_open]: open })}>
-				{open && (
+				className={clsx(styles.container, {
+					[styles.container_open]: isMenuOpen,
+				})}>
+				{isMenuOpen && (
 					<form className={styles.form} onSubmit={submitButton} ref={ref}>
 						<Text
 							family='open-sans'
@@ -81,30 +105,30 @@ export const ArticleParamsForm = ({
 						<Select
 							selected={articleState.fontFamilyOption}
 							options={fontFamilyOptions}
-							onChange={fontFamily}
+							onChange={changeFontFamily}
 							title='Шрифт'
 						/>
 						<RadioGroup
 							selected={articleState.fontSizeOption}
 							name='radio'
 							options={fontSizeOptions}
-							onChange={fontSize}
+							onChange={changeFontSize}
 							title='Размер шрифта'></RadioGroup>
 						<Select
 							selected={articleState.fontColor}
 							options={fontColors}
-							onChange={fontColor}
+							onChange={changeFortColor}
 							title='Цвет шрифта'></Select>
 						<Separator></Separator>
 						<Select
 							selected={articleState.backgroundColor}
 							options={backgroundColors}
-							onChange={backgroundColor}
+							onChange={changeBackgroundColor}
 							title='Цвет фона'></Select>
 						<Select
 							selected={articleState.contentWidth}
 							options={contentWidthArr}
-							onChange={contentWidth}
+							onChange={changeContentWidth}
 							title='Ширина контента'></Select>
 						<div className={clsx(styles.bottomContainer)}>
 							<Button
